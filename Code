@@ -1,0 +1,120 @@
+from LocoXtreme import Connection
+from LocoXtreme import LocoXtreme
+from LocoXtreme import MotorDirection as MD
+from LocoXtreme import Data
+from LocoXtreme import WaitType as WT
+import time
+
+# Create Connection Instance
+connection = Connection()
+
+# USB Connection Setup
+connection.setup()
+
+# Scan for Robots
+robots = connection.scan(4000)
+
+# Get Named Robot
+robot = connection.get_robot(robots, "BiggestD")
+
+# Create LocoXtreme Object
+locoxtreme = LocoXtreme(robot)
+
+# Connect to LocoXtreme
+locoxtreme.connect()
+
+# Activate Motors
+locoxtreme.activate_motors()
+
+# Enable Sensors
+locoxtreme.enable_sensor(Data.ULTRASONIC, 1)
+
+# Pause for Initializations
+time.sleep(0.4)
+
+
+# Stop robot
+def stop_robot():
+    locoxtreme.move(MD.FORWARD, MD.FORWARD, 0, 0, False)
+
+
+# Move forward for a certain number of seconds
+def move_forward(seconds):
+    locoxtreme.move(MD.FORWARD, MD.FORWARD, 1, 1, False)
+    time.sleep(seconds)
+    stop_robot()
+    time.sleep(0.1)
+
+
+# Rotate 45 degrees right
+def rotate_r45():
+    locoxtreme.setup_wait(WT.ROTATION, 45)
+    locoxtreme.move(
+        MD.FORWARD,
+        MD.BACKWARD,
+        0.5,
+        0.5,
+    True
+    )
+    time.sleep(0.1)
+
+
+# Rotate 45 degrees left
+def rotate_l45():
+    locoxtreme.setup_wait(WT.ROTATION, 45)
+    locoxtreme.move(
+        MD.BACKWARD,
+        MD.FORWARD,
+        0.5,
+        0.5,
+        True
+    )
+    time.sleep(0.1)
+
+
+# Turn 90 degrees right
+def turn_r90():
+    rotate_r45()
+    rotate_r45()
+
+
+# Turn 90 degrees left
+def turn_l90():
+    rotate_l45()
+    rotate_l45()
+
+
+# Turn around
+def turn_around():
+    turn_r90()
+    turn_r90()
+
+
+# Get ultrasonic distance
+def get_distance():
+    return locoxtreme.get_sensor_value(Data.ULTRASONIC)
+
+
+# Maze settings
+distance = 21
+FD = 0.5
+
+
+
+# Main maze loop
+
+while True: #Keeps the Robot moving forever 
+    if get_distance() > distance: # Checks if distance infront is greater than walls
+        move_forward(FD)
+        continue # makes it continuous 
+
+        stop_robot()
+        time.sleep(0.2)
+
+    for turn in [turn_r90, turn_l90, turn_l90]: # List so the robot moves in that direction 
+        turn() # call the list 
+        time.sleep(0.2)
+
+        if get_distance() > distance: # new distance is greater than wall distance 
+            move_forward(FD)
+            break # Breaks loop so it doesnt keep scaning for new directions
